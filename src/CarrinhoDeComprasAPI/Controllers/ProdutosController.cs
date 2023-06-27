@@ -16,26 +16,27 @@ namespace WebAPI.Controllers
         }
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest )]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> BuscarTodos()
+        public IAsyncEnumerable<Produtos> BuscarTodos()
         {
             try
             {
-                var produtos = _dalProdutos.BuscarTodosAsync();
-                return Ok(produtos);
+                return _dalProdutos.BuscarTodosAsync();
+                
             }
-            catch(Exception erro)
+            catch(Exception)
             {
-                return BadRequest(erro.Message);
+                throw;
             }
         }
+
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> BuscarPorId(int id)
+        public async Task<IActionResult> BuscarPorId(int id )
         {
             try
             {
@@ -64,11 +65,12 @@ namespace WebAPI.Controllers
                 await _dalProdutos.AddAsync(produto);
                 return CreatedAtAction(
                     nameof(BuscarPorId),
+                    new {Id = produto.Id},
                     produto);
             }
             catch(Exception erro)
             {
-                return BadRequest(erro.Message);
+                return BadRequest();
             }
         }
         [HttpPut("{id}")]
@@ -77,11 +79,10 @@ namespace WebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Atualizar(int id, [FromBody] Produtos produto)
         {
-            if(produto is null || id == 0 || !ModelState.IsValid)
+            if(produto is null && id == 0 && !ModelState.IsValid)
             {
                 return BadRequest();
             }
-
             try
             {
                 bool status = await _dalProdutos.AtualizarAsync(produto);
@@ -92,6 +93,7 @@ namespace WebAPI.Controllers
                 throw;
             }
         }
+
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -102,13 +104,12 @@ namespace WebAPI.Controllers
             {
                 return BadRequest();
             }
-
             try
             {
                 bool status = await _dalProdutos.DeletarAsync(id);
-                return Ok(new { status, descricao = status ? "excluído" : "não foi excluído" });
+                return Ok(new {status, descricao = status ? "Excluído" : "Não foi excluído"});
             }
-            catch(Exception ex)
+            catch (Exception)
             {
                 throw;
             }
